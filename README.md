@@ -11,11 +11,16 @@ Five columns are included in the schedule the code was made for: Presenters, Sta
 The instructions are the same:
 
 > Create a Google Calendar (e.g., "X")
+> 
 > Obtain the ID from *My calendars>Options for X>Settings and sharing>Integrate calendar>Calendar ID*
+> 
 > Create your schedule in a Google Spreadsheet
-> Go to *Extensions>Apps Script* and paste the code at `sheets_to_calendar`
-> Set `calendarID = "[ID]"` in the code (replace `[ID]` with your copied Calendar ID) (line )
-> Adjust `var signups` to match your schedule's cell range (line )
+> 
+> Go to *Extensions>Apps Script* and paste the code at `calendar_app.js`
+> 
+> Set `calendarID = "[ID]"` in the code (replace `[ID]` with your copied Calendar ID) (line 5)
+>
+> Adjust `var signups` to match your schedule's cell range (line 15)
 
 Note that dates must be formatted as "dd/MM/yyyy HH:mm:ss".
 
