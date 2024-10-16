@@ -18,11 +18,11 @@ The instructions are the same:
 > 
 > Go to *Extensions>Apps Script* and paste the code at `calendar_app.js`
 > 
-> Set `calendarID = "[ID]"` in the code (replace `[ID]` with your copied Calendar ID) (line 5)
+> Set `calendarID = "[ID]"` in the code (replace `[ID]` with your Calendar ID) (line 5)
 >
 > Adjust `var signups` to match your schedule's cell range (line 15)
 
-Note that dates must be formatted as "dd/MM/yyyy HH:mm:ss".
+Note that dates (columns 2 and 3 in this code) must be formatted as "dd/MM/yyyy HH:mm:ss".
 
 The first function will sync your spreadsheet to your calendar. The second will create the "Sync to Calendar" button in your spreadsheet. 
 
