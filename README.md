@@ -4,7 +4,7 @@ A Google Apps Script to sync a Google Spreadsheet with a Google Calendar.
 
 It is based on [this tutorial](https://workspace.google.com/blog/productivity-collaboration/g-suite-pro-tip-how-to-automatically-add-a-schedule-from-google-sheets-into-calendar). 
 
-The original code duplicates events. This one fixes the issue. I'm sure there are smarter ways to do it, but this version has proved relatively fast and reliable.
+The original code duplicates events. This one fixes the issue and prevents empty slots in the calendar. I'm sure there are smarter ways to do it, but this version has proved relatively fast and reliable.
 
 Five columns are included in the schedule the code was made for: Presenters, Starts, Ends, Location, and	Notes. Any changes to the number or position of columns require corresponding changes in the code.
 
@@ -24,7 +24,7 @@ The instructions are the same:
 
 Note that dates (columns 2 and 3 in this code) must be formatted as "dd/MM/yyyy HH:mm:ss".
 
-Moreover, if the event is named "Up For Grabs" or "-", no event will be created.
+Moreover, if the event is named "Up For Grabs" or "-" (column 1), no event will be created.
 
 The first function will sync your spreadsheet to your calendar. The second will create the "Sync to Calendar" button in your spreadsheet. 
 
