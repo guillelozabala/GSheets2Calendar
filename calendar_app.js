@@ -2,7 +2,7 @@ function advisingSchedule() {
 
   // Open the calendar
   var spreadsheet = SpreadsheetApp.getActiveSheet();
-  var calendarId = ""; // Here goes your calendar ID
+  var calendarId = "c_bfa60f6c8dfd9f8c5b4b446ae7508c76d0d2c2b7742342aa5185feda5e4839d5@group.calendar.google.com"; // Here goes your calendar ID
   var eventCal = CalendarApp.getCalendarById(calendarId);
 
   // Get all existing events in the range
@@ -43,8 +43,8 @@ function advisingSchedule() {
       }
     }
 
-    // If no matching event is found, create a new one
-    if (!eventExists) {
+    // If no matching event is found, create a new one (unless up for grabs or not feasible)
+    if (!eventExists && presenter !== "Up For Grabs" && presenter !== "-") {
       eventCal.createEvent(presenter, startTime, endTime, {
         location: location,
         description: description
@@ -56,6 +56,12 @@ function advisingSchedule() {
   for (var i = 0; i < existingEvents.length; i++) {
     var event = existingEvents[i];
     var eventHasMatch = false;
+
+    // If the event title is "Up For Grabs" or "-", delete the event immediately
+    if (event.getTitle() === "Up For Grabs" || event.getTitle() === "-") {
+      event.deleteEvent();
+      continue; // Skip to the next event after deletion
+    }
 
     // Loop through signups to see if the existing event has a match
     for (var x = 0; x < signups.length; x++) {
