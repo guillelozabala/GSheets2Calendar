@@ -24,6 +24,8 @@ The instructions are the same:
 
 Note that dates (columns 2 and 3 in this code) must be formatted as "dd/MM/yyyy HH:mm:ss".
 
+Moreover, if the event is named "Up For Grabs" or "-", no event will be created.
+
 The first function will sync your spreadsheet to your calendar. The second will create the "Sync to Calendar" button in your spreadsheet. 
 
 **Any changes to the spreadsheet won’t automatically reflect in the calendar. You must click the "Sync to Calendar" button to update it manually.**
