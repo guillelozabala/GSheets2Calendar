@@ -1,4 +1,4 @@
-# sheets_to_calendar
+# GSheets2Calendar
 
 A Google Apps Script to sync a Google Spreadsheet with a Google Calendar.
 
