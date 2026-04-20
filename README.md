@@ -2,11 +2,18 @@
 
 A Google Apps Script to sync a Google Spreadsheet with a Google Calendar.
 
-It is based on [this tutorial](https://workspace.google.com/blog/productivity-collaboration/g-suite-pro-tip-how-to-automatically-add-a-schedule-from-google-sheets-into-calendar). 
+It is based on [this tutorial](https://workspace.google.com/blog/productivity-collaboration/g-suite-pro-tip-how-to-automatically-add-a-schedule-from-google-sheets-into-calendar).
 
-The original code duplicates events. This one fixes the issue and prevents empty slots in the calendar. I'm sure there are smarter ways to do it, but this version has proved relatively fast and reliable.
+The original code duplicated events when the sync was run more than once. This version is designed to be idempotent: each spreadsheet row gets a hidden sync ID and stores the matching Google Calendar event ID, so later syncs update or delete the same event instead of creating another copy.
 
-Five columns are included in the schedule the code was made for: Presenters, Starts, Ends, Location, and	Notes. Any changes to the number or position of columns require corresponding changes in the code.
+Five visible columns are included in the schedule the code was made for: Presenters, Starts, Ends, Location, and Notes. The script reads rows dynamically from row 3 downward, so adding events below the original range no longer requires a code change.
+
+The script will add and hide two metadata columns:
+
+- `GSheets2Calendar Sync ID`
+- `GSheets2Calendar Event ID`
+
+Do not edit those hidden columns manually. They are what make repeat syncs safe.
 
 The instructions are the same:
 
@@ -18,15 +25,18 @@ The instructions are the same:
 > 
 > Go to *Extensions>Apps Script* and paste the code at `calendar_app.js`
 > 
-> Set `calendarID = "[ID]"` in the code (replace `[ID]` with your Calendar ID) (line 5)
+> Set `ADVISING_SYNC_CONFIG.CALENDAR_ID = "[ID]"` in the code (replace `[ID]` with your Calendar ID)
 >
-> Adjust `var signups` to match your schedule's cell range (line 15)
+> If needed, adjust `ADVISING_SYNC_CONFIG.HEADER_ROW`, `FIRST_DATA_ROW`, or `COLUMNS` to match your sheet layout
 
 Note that dates (columns 2 and 3 in this code) must be formatted as "dd/MM/yyyy HH:mm:ss".
 
 Moreover, if the event is named "Up For Grabs" or "-" (column 1), no event will be created.
 
-The first function will sync your spreadsheet to your calendar. The second will create the "Sync to Calendar" button in your spreadsheet. 
+The first sync also migrates old events created by the previous script version when it can match them by title and time. Managed events are tagged in the calendar description with `[GSheets2Calendar]` and a source ID. The cleanup pass removes stale managed events and duplicates inside the configured cleanup window.
+
+The first function will sync your spreadsheet to your calendar. The second will create the "Sync to Calendar" button in your spreadsheet.
 
 **Any changes to the spreadsheet won’t automatically reflect in the calendar. You must click the "Sync to Calendar" button to update it manually.**
 
+After each run, the spreadsheet shows a toast summary such as created, updated, deleted, skipped, and warnings. If warnings appear, open the Apps Script execution log for row-level details.
