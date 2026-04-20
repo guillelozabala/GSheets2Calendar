@@ -1,5 +1,5 @@
 var ADVISING_SYNC_CONFIG = {
-  CALENDAR_ID: "REDACTED_CALENDAR_ID",
+  CALENDAR_ID_PROPERTY: "ADVISING_CALENDAR_ID",
 
   // Leave blank to use the active sheet. Set to "Hoja 1" or another tab name
   // if the spreadsheet eventually contains more than one sheet.
@@ -50,11 +50,7 @@ function advisingSchedule() {
   try {
     var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = getScheduleSheet_(spreadsheet);
-    var calendar = CalendarApp.getCalendarById(ADVISING_SYNC_CONFIG.CALENDAR_ID);
-
-    if (!calendar) {
-      throw new Error("Calendar not found. Check ADVISING_SYNC_CONFIG.CALENDAR_ID.");
-    }
+    var calendar = getAdvisingCalendar_();
 
     var metadata = ensureMetadataColumns_(sheet);
     var syncData = readScheduleRows_(sheet, metadata, summary);
@@ -90,6 +86,21 @@ function getScheduleSheet_(spreadsheet) {
   }
 
   return spreadsheet.getActiveSheet();
+}
+
+function getAdvisingCalendar_() {
+  var calendarId = cleanString_(PropertiesService.getScriptProperties().getProperty(ADVISING_SYNC_CONFIG.CALENDAR_ID_PROPERTY));
+
+  if (!calendarId) {
+    throw new Error("Missing script property " + ADVISING_SYNC_CONFIG.CALENDAR_ID_PROPERTY + ".");
+  }
+
+  var calendar = CalendarApp.getCalendarById(calendarId);
+  if (!calendar) {
+    throw new Error("Calendar not found. Check script property " + ADVISING_SYNC_CONFIG.CALENDAR_ID_PROPERTY + ".");
+  }
+
+  return calendar;
 }
 
 function ensureMetadataColumns_(sheet) {

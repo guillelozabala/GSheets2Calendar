@@ -25,7 +25,7 @@ The instructions are the same:
 > 
 > Go to *Extensions>Apps Script* and paste the code at `calendar_app.js`
 > 
-> Set `ADVISING_SYNC_CONFIG.CALENDAR_ID = "[ID]"` in the code (replace `[ID]` with your Calendar ID)
+> In Apps Script, go to *Project Settings > Script properties* and add `ADVISING_CALENDAR_ID` with your Google Calendar ID as the value
 >
 > If needed, adjust `ADVISING_SYNC_CONFIG.HEADER_ROW`, `FIRST_DATA_ROW`, or `COLUMNS` to match your sheet layout
 
@@ -40,3 +40,5 @@ The first function will sync your spreadsheet to your calendar. The second will 
 **Any changes to the spreadsheet won’t automatically reflect in the calendar. You must click the "Sync to Calendar" button to update it manually.**
 
 After each run, the spreadsheet shows a toast summary such as created, updated, deleted, skipped, and warnings. If warnings appear, open the Apps Script execution log for row-level details.
+
+The calendar ID is intentionally stored in Apps Script's Script Properties instead of in this repository. Do not paste private calendar IDs, API keys, OAuth secrets, or service account credentials directly into the source code.
