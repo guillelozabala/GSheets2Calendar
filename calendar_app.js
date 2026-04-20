@@ -1,101 +1,87 @@
 function advisingSchedule() {
+  var sheet = SpreadsheetApp.getActiveSheet();
 
-  // Open the calendar
-  var spreadsheet = SpreadsheetApp.getActiveSheet();
-  var calendarId = "REDACTED_CALENDAR_ID"; // Here goes your calendar ID
-  var eventCal = CalendarApp.getCalendarById(calendarId);
+  var calendarId = "REDACTED_CALENDAR_ID";
+  var cal = CalendarApp.getCalendarById(calendarId);
 
-  // Get all existing events in the range
-  var startRange = new Date("01/01/2024 15:00:00");
-  var endRange = new Date("01/01/2026 15:00:00");
+  // Only events containing this tag will be managed (deleted/recreated).
+  var TAG = "Advising Group";
 
-  var existingEvents = eventCal.getEvents(startRange, endRange);
+  // Read signups (no headers)
+  var signups = sheet.getRange("A3:E20").getValues();
 
-  // Read the schedule (change accordingly, don't include headers)
-  var signups = spreadsheet.getRange("A3:E20").getValues();
-  
-  // First loop: Create new events if no matching event exists
-  for (var x = 0; x < signups.length; x++) {
+  // Collect valid rows and the set of days they touch
+  var rows = [];
+  var dayKeys = {}; // map dayKey -> true
 
-    var presentation = signups[x];
+  for (var i = 0; i < signups.length; i++) {
+    var presenter = signups[i][0];
+    var startTime = signups[i][1];
+    var endTime = signups[i][2];
+    var location = signups[i][3];
+    var description = signups[i][4];
 
-    var presenter = presentation[0];
-    var startTime = presentation[1];
-    var endTime = presentation[2];
-    var location = presentation[3];
-    var description = presentation[4];
+    // Skip placeholders / empty
+    if (!presenter || presenter === "Up For Grabs" || presenter === "-") continue;
 
-    // Flag to check if the event already exists and matches
-    var eventExists = false;
+    // Ensure start/end are Dates (Sheets sometimes gives strings if formatting is off)
+    if (!(startTime instanceof Date) || isNaN(startTime.getTime())) continue;
+    if (!(endTime instanceof Date) || isNaN(endTime.getTime())) continue;
 
-    // Loop through existing events to check for a matching one
-    for (var i = 0; i < existingEvents.length; i++) {
-      var event = existingEvents[i];
+    rows.push({
+      presenter: String(presenter),
+      startTime: startTime,
+      endTime: endTime,
+      location: location ? String(location) : "",
+      description: description ? String(description) : ""
+    });
 
-      // Check if event matches
-      if (event.getTitle() === presenter &&
-          event.getStartTime().getTime() === startTime.getTime() &&
-          event.getEndTime().getTime() === endTime.getTime() &&
-          event.getLocation() === location &&
-          event.getDescription() === description) {
-        eventExists = true;
-        break;
+    var dayKey = Utilities.formatDate(startTime, Session.getScriptTimeZone(), "yyyy-MM-dd");
+    dayKeys[dayKey] = true;
+  }
+
+  // 1) DELETE: For each day present in the sheet, delete previously synced events on that day.
+  var tz = Session.getScriptTimeZone();
+  var dayKeyList = Object.keys(dayKeys);
+
+  for (var d = 0; d < dayKeyList.length; d++) {
+    var key = dayKeyList[d]; // "yyyy-MM-dd"
+
+    // Build day start/end in script timezone
+    var parts = key.split("-");
+    var dayStart = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 0, 0, 0);
+    var dayEnd = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59);
+
+    var events = cal.getEvents(dayStart, dayEnd);
+    for (var e = 0; e < events.length; e++) {
+      var ev = events[e];
+      var desc = ev.getDescription() || "";
+      // Only delete events that this script created earlier
+      if (desc.indexOf(TAG) !== -1) {
+        ev.deleteEvent();
       }
-    }
-
-    // If no matching event is found, create a new one (unless up for grabs or not feasible)
-    if (!eventExists && presenter !== "Up For Grabs" && presenter !== "-") {
-      eventCal.createEvent(presenter, startTime, endTime, {
-        location: location,
-        description: description
-      });
     }
   }
 
-  // Second loop: Delete old events that no longer have a corresponding signup
-  for (var i = 0; i < existingEvents.length; i++) {
-    var event = existingEvents[i];
-    var eventHasMatch = false;
+  // 2) CREATE: Recreate events from the sheet, tagged so we can manage them next sync.
+  for (var r = 0; r < rows.length; r++) {
+    var row = rows[r];
 
-    // If the event title is "Up For Grabs" or "-", delete the event immediately
-    if (event.getTitle() === "Up For Grabs" || event.getTitle() === "-") {
-      event.deleteEvent();
-      continue; // Skip to the next event after deletion
-    }
+    var fullDescription = row.description;
+    if (fullDescription) fullDescription += "\n\n";
+    fullDescription += TAG;
 
-    // Loop through signups to see if the existing event has a match
-    for (var x = 0; x < signups.length; x++) {
-
-      var presentation = signups[x];
-      
-      var presenter = presentation[0];
-      var startTime = presentation[1];
-      var endTime = presentation[2];
-      var location = presentation[3];
-      var description = presentation[4];
-
-      // Check if the event matches the signup
-      if (event.getTitle() === presenter &&
-          event.getStartTime().getTime() === startTime.getTime() &&
-          event.getEndTime().getTime() === endTime.getTime() &&
-          event.getLocation() === location &&
-          event.getDescription() === description) {
-        eventHasMatch = true;
-        break;
-      }
-    }
-
-    // If no match is found for the existing event, delete it
-    if (!eventHasMatch) {
-      event.deleteEvent();
-    }
+    cal.createEvent(row.presenter, row.startTime, row.endTime, {
+      location: row.location,
+      description: fullDescription
+    });
   }
 }
 
-// Update plug-in
+// Menu
 function onOpen() {
-    var ui = SpreadsheetApp.getUi();
-    ui.createMenu('Sync to Calendar')
+  SpreadsheetApp.getUi()
+    .createMenu('Sync to Calendar')
     .addItem('Update presentations', 'advisingSchedule')
     .addToUi();
 }
